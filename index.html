@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project TimeTag - Attendance Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #1a202c;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+            color: white;
+            padding: 24px 0;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(30, 58, 138, 0.3);
+            border-bottom: 3px solid #3b82f6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .upload-section {
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            height: fit-content;
+        }
+
+        .upload-area {
+            border: 2px dashed #3b82f6;
+            border-radius: 12px;
+            padding: 48px 24px;
+            text-align: center;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e0e7ff 100%);
+            margin: 24px 0;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .upload-area:hover {
+            border-color: #2563eb;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+        }
+
+        .upload-area.dragover {
+            border-color: #1d4ed8;
+            background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3.5em;
+            color: #3b82f6;
+            margin-bottom: 16px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .upload-btn:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        .upload-btn:disabled {
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .attendance-section {
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .date-picker {
+            padding: 12px 16px;
+            border: 2px solid #d1d5db;
+            border-radius: 10px;
+            font-size: 14px;
+            background: #ffffff;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .date-picker:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .export-btn, .add-engineer-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .export-btn:hover, .add-engineer-btn:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 4px solid #3b82f6;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        .attendance-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 9pt;
+            border: 1px solid #e2e8f0;
+        }
+
+        .attendance-table th {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 16px 12px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 10pt;
+            letter-spacing: 0.5px;
+            font-size: 8pt;
+            font-family: 'Tahoma', sans-serif;
+        }
+
+        .attendance-table td {
+            padding: 14px 10px;
+            text-align: center;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 9pt;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            transition: background-color 0.2s ease;
+        }
+
+        .attendance-table tr:hover {
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+        }
+
+        .engineer-name {
+            text-align: left !important;
+            font-weight: 600;
+            color: #1e40af;
+            font-size: 10pt;
+        }
+
+        .status-in { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #15803d; font-weight: 600; border-radius: 6px; padding: 6px 10px; cursor: pointer; border: 1px solid #86efac; }
+        .status-sick { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #dc2626; font-weight: 600; border-radius: 6px; padding: 6px 10px; cursor: pointer; border: 1px solid #fca5a5; }
+        .status-vl { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #2563eb; font-weight: 600; border-radius: 6px; padding: 6px 10px; cursor: pointer; border: 1px solid #93c5fd; }
+        .status-absent { background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); color: #be185d; font-weight: 600; border-radius: 6px; padding: 6px 10px; cursor: pointer; border: 1px solid #f9a8d4; }
+        .status-late { background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); color: #d97706; font-weight: 600; border-radius: 6px; padding: 6px 10px; cursor: pointer; border: 1px solid #fcd34d; }
+        .status-missing { background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); color: #ea580c; font-weight: 600; border-radius: 6px; padding: 6px 10px; cursor: pointer; border: 1px solid #fb923c; }
+
+        .legend {
+            margin-top: 24px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 12px;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .legend-title {
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #1e40af;
+            font-size: 16px;
+        }
+
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #48bb78;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .file-list {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .file-item {
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .delete-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .tab-navigation {
+            display: flex;
+            margin-bottom: 24px;
+            border-bottom: none;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 14px 28px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #64748b;
+            border-radius: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tab-btn.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: #3b82f6;
+            background: linear-gradient(135deg, #f1f5f9 0%, #e0e7ff 100%);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .status-work {
+            background: #c6f6d5;
+            color: #22543d;
+            font-weight: bold;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+
+        .status-rest {
+            background: #bee3f8;
+            color: #2a4365;
+            font-weight: bold;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+
+        .status-off {
+            background: #fbb6ce;
+            color: #702459;
+            font-weight: bold;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+
+        .status-hol {
+            background: #fed7d7;
+            color: #742a2a;
+            font-weight: bold;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+
+        .schedule-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .schedule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
+            color: white;
+        }
+
+        .schedule-title h2 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .schedule-title p {
+            opacity: 0.9;
+        }
+
+        .schedule-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .schedule-actions .add-engineer-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .schedule-actions .add-engineer-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .schedule-actions .delete-btn {
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            border: 2px solid rgba(231, 76, 60, 0.3);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .schedule-actions .delete-btn:hover {
+            background: #c0392b;
+            border-color: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(192, 57, 43, 0.3);
+        }
+
+        .schedule-table-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .schedule-table-section .attendance-table {
+            margin: 0;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .schedule-table-section .legend {
+            margin: 0;
+            padding: 20px;
+            background: #f8f9ff;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .schedule-modal-tabs {
+            display: flex;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+
+        .schedule-tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            color: #666;
+            flex: 1;
+        }
+
+        .schedule-tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 600;
+        }
+
+        .schedule-tab-btn:hover {
+            color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .schedule-tab-content {
+            display: none;
+        }
+
+        .schedule-tab-content.active {
+            display: block;
+        }
+
+        .bulk-format-help {
+            background: #f8f9ff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            margin-bottom: 20px;
+        }
+
+        .bulk-format-help h4 {
+            margin: 0 0 10px 0;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .bulk-format-help ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #666;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .bulk-format-help li {
+            margin-bottom: 4px;
+        }
+
+        #bulkScheduleData {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            transition: border-color 0.3s ease;
+            resize: vertical;
+            min-height: 200px;
+        }
+
+        #bulkScheduleData:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+
+        .modal-actions-top {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .modal-actions-top button {
+            flex: 1;
+            max-width: 180px;
+            font-size: 14px;
+            padding: 10px 16px;
+        }
+
+        @media (max-width: 768px) {
+            .schedule-container {
+                padding: 15px;
+            }
+
+            .schedule-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .schedule-title h2 {
+                font-size: 24px;
+            }
+
+            .schedule-actions {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .schedule-actions .add-engineer-btn,
+            .schedule-actions .delete-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .schedule-tab-btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .modal-actions-top {
+                flex-direction: column;
+                padding: 10px;
+            }
+
+            .modal-actions-top button {
+                max-width: none;
+                margin-bottom: 8px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .attendance-table {
+                font-size: 11px;
+            }
+
+            .attendance-table th,
+            .attendance-table td {
+                padding: 6px 4px;
+            }
+
+            .tab-navigation {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                text-align: left;
+                border-bottom: 1px solid #e2e8f0;
+                border-left: 3px solid transparent;
+            }
+
+            .tab-btn.active {
+                border-left-color: #3b82f6;
+                border-bottom-color: #e2e8f0;
+            }
+        }
+    </style>
+    <!-- SheetJS library for Excel file support -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px;">Project TimeTag</h1>
+        <p id="weekDisplay" style="font-size: 1.1rem; opacity: 0.9; font-weight: 400;">Professional Attendance Management System</p>
+    </div>
+
+    <div class="container">
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="switchTab('attendance')">📊 Attendance Dashboard</button>
+            <button class="tab-btn" onclick="switchTab('schedules')">⏰ Engineers' Time & Restdays</button>
+        </div>
+
+        <!-- Attendance Tab Content -->
+        <div id="attendanceTab" class="tab-content active">
+            <div class="dashboard-grid">
+                <!-- Upload Section -->
+                <div class="upload-section">
+                <h2>📁 Upload Attendance Files</h2>
+                <p style="margin: 15px 0; color: #666;">Upload CSV with login/logout data or time tracking system exports</p>
+                <div style="padding: 12px; background: #fef5e7; border-radius: 6px; border-left: 4px solid #f6ad55; margin: 10px 0;">
+                    <strong>⚠️ STEP 1 REQUIRED:</strong> Upload engineer schedules first!<br>
+                    Go to <strong>"Engineers' Time & Restdays"</strong> tab → <strong>"Add Engineer Schedule"</strong> → <strong>"Bulk Entry"</strong> tab
+                </div>
+
+                <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📤</div>
+                    <p><strong>Click to browse</strong> or drag files here</p>
+                    <p style="font-size: 14px; color: #666; margin-top: 10px;">
+                        Supported: .csv, .json, .txt, .xls, .xlsx
+                    </p>
+                    <input type="file" id="fileInput" class="file-input" multiple accept=".csv,.json,.txt,.xls,.xlsx">
+                </div>
+
+                <div class="progress-bar" id="progressBar" style="display: none;">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+
+                <button class="upload-btn" id="processBtn" onclick="processFiles()">🚀 Process Files</button>
+
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                    <h4>📊 Uploaded Files</h4>
+                    <div id="fileList" class="file-list"></div>
+                </div>
+
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                    <button class="add-engineer-btn" onclick="openAddEngineerModal()">➕ Add Engineer</button>
+                    <button class="delete-btn" style="margin-left: 10px; padding: 10px 20px; background: #e53e3e;" onclick="clearAllData()">🗑️ Clear All Data</button>
+                </div>
+            </div>
+
+            <!-- Attendance Summary Section -->
+            <div class="attendance-section">
+                <h2>👥 Squad Attendance Summary</h2>
+
+                <div class="controls">
+                    <div>
+                        <label>📅 Week: </label>
+                        <input type="date" id="startDate" class="date-picker" onchange="updateDateRange()">
+                        <span> to </span>
+                        <input type="date" id="endDate" class="date-picker" onchange="updateDateRange()">
+                    </div>
+                    <div>
+                        <button class="export-btn" onclick="exportToCSV()">📄 Export CSV</button>
+                        <button class="export-btn" onclick="exportToExcel()" style="background: #2d3748;">📊 Export Excel (Formatted)</button>
+                    </div>
+                </div>
+
+                <div class="summary-stats" id="summaryStats">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="attendance-table">
+                        <thead id="tableHeader">
+                            <!-- Will be populated by JavaScript -->
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-title">📋 Status Legend</div>
+                    <div class="legend-items">
+                        <div class="legend-item">
+                            <span class="status-in">IN</span>
+                            <span>Worked ≥ 9 hours & on time</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="status-missing">##</span>
+                            <span>Late minutes (if ≥9hrs) OR missing minutes (if 4-9hrs & on time)</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="status-sick">SICK</span>
+                            <span>Sick Leave</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="status-vl">VL</span>
+                            <span>Vacation Leave</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="status-absent">ABSNT</span>
+                            <span>Absent</span>
+                        </div>
+                        <div class="legend-item">
+                            <span style="color: #e53e3e; font-weight: bold;">-</span>
+                            <span>No data OR no schedule OR late & worked <9hrs</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px; background: #fef5e7; border-radius: 6px; border-left: 4px solid #f6ad55;">
+                        <strong>⚠️ Important:</strong> Engineer schedules must be uploaded first before attendance can be calculated.
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Schedules Tab Content -->
+        <div id="schedulesTab" class="tab-content">
+            <div class="schedule-container">
+                <!-- Schedule Header -->
+                <div class="schedule-header">
+                    <div class="schedule-title">
+                        <h2>⏰ Engineers' Schedule & Restdays</h2>
+                        <p style="margin: 8px 0 0 0; color: #666; font-size: 15px;">Manage engineer work schedules and rest days</p>
+                    </div>
+                    <div class="schedule-actions">
+                        <button class="add-engineer-btn" onclick="openAddScheduleModal()">
+                            ➕ Add Engineer Schedule
+                        </button>
+                        <button class="delete-btn" onclick="clearScheduleData()">
+                            🗑️ Clear All Schedules
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Schedule Table Section -->
+                <div class="schedule-table-section">
+                    <div style="overflow-x: auto;">
+                        <table class="attendance-table">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left; min-width: 250px;">ENGINEER</th>
+                                    <th style="min-width: 120px;">SHIFT START</th>
+                                    <th style="min-width: 100px;">US RD</th>
+                                    <th style="min-width: 100px;">MLA RD</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scheduleTableBody">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="legend">
+                        <div class="legend-title">📋 Rest Day Abbreviations</div>
+                        <div class="legend-items">
+                            <div class="legend-item">
+                                <span class="status-in">MON TUE WED</span>
+                                <span>Monday, Tuesday, Wednesday</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="status-vl">THU FRI SAT SUN</span>
+                                <span>Thursday, Friday, Saturday, Sunday</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Engineer Modal -->
+    <div id="addEngineerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="closeAddEngineerModal()">&times;</span>
+                <h3>Add New Engineer</h3>
+            </div>
+            <form id="addEngineerForm">
+                <div class="form-group">
+                    <label>Engineer Name:</label>
+                    <input type="text" id="engineerName" required>
+                </div>
+                <div>
+                    <button type="submit" class="btn-primary">Add Engineer</button>
+                    <button type="button" class="btn-secondary" onclick="closeAddEngineerModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Status Modal -->
+    <div id="editStatusModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="closeEditStatusModal()">&times;</span>
+                <h3>Edit Attendance Status</h3>
+            </div>
+            <form id="editStatusForm">
+                <div class="form-group">
+                    <label>Engineer:</label>
+                    <input type="text" id="editEngineerName" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Date:</label>
+                    <input type="text" id="editDate" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Status:</label>
+                    <select id="editStatus" required>
+                        <option value="IN">Present (IN)</option>
+                        <option value="SICK">Sick Leave (SICK)</option>
+                        <option value="VL">Vacation Leave (VL)</option>
+                        <option value="ABSNT">Absent (ABSNT)</option>
+                        <option value="LATE">Late (specify minutes)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="lateMinutesGroup" style="display: none;">
+                    <label>Minutes Late:</label>
+                    <input type="number" id="lateMinutes" min="1" max="480">
+                </div>
+                <div>
+                    <button type="submit" class="btn-primary">Update Status</button>
+                    <button type="button" class="btn-secondary" onclick="closeEditStatusModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Schedule Modal -->
+    <div id="addScheduleModal" class="modal">
+        <div class="modal-content" style="max-width: 700px; max-height: 85vh; overflow-y: auto;">
+            <div class="modal-header">
+                <span class="close" onclick="closeAddScheduleModal()">&times;</span>
+                <h3>Add Engineer Schedule</h3>
+            </div>
+
+            <!-- Action Buttons at Top -->
+            <div class="modal-actions-top">
+                <button type="button" class="btn-primary" onclick="attendanceApp.submitCurrentForm()">✅ Add Schedule</button>
+                <button type="button" class="btn-primary" onclick="attendanceApp.saveCurrentData()" style="background: #48bb78;">💾 Save</button>
+                <button type="button" class="btn-secondary" onclick="closeAddScheduleModal()">Cancel</button>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="schedule-modal-tabs">
+                <button type="button" class="schedule-tab-btn active" onclick="switchScheduleTab('single')">Single Entry</button>
+                <button type="button" class="schedule-tab-btn" onclick="switchScheduleTab('bulk')">Bulk Entry</button>
+            </div>
+
+            <!-- Single Entry Tab -->
+            <div id="singleEntryTab" class="schedule-tab-content active">
+                <form id="addScheduleForm">
+                    <div class="form-group">
+                        <label>Engineer Name:</label>
+                        <input type="text" id="scheduleEngineerName" required placeholder="e.g., GREGGY JIM IVAN PADRIQUE">
+                    </div>
+                    <div class="form-group">
+                        <label>Shift Start Time:</label>
+                        <select id="scheduleShiftStart" required>
+                            <option value="">Select Shift Start</option>
+                            <option value="12:00 AM">12:00 AM</option>
+                            <option value="1:00 AM">1:00 AM</option>
+                            <option value="2:00 AM">2:00 AM</option>
+                            <option value="3:00 AM">3:00 AM</option>
+                            <option value="4:00 AM">4:00 AM</option>
+                            <option value="5:00 AM">5:00 AM</option>
+                            <option value="6:00 AM">6:00 AM</option>
+                            <option value="7:00 AM">7:00 AM</option>
+                            <option value="8:00 AM">8:00 AM</option>
+                            <option value="9:00 AM">9:00 AM</option>
+                            <option value="10:00 AM">10:00 AM</option>
+                            <option value="11:00 AM">11:00 AM</option>
+                            <option value="12:00 PM">12:00 PM</option>
+                            <option value="1:00 PM">1:00 PM</option>
+                            <option value="2:00 PM">2:00 PM</option>
+                            <option value="3:00 PM">3:00 PM</option>
+                            <option value="4:00 PM">4:00 PM</option>
+                            <option value="5:00 PM">5:00 PM</option>
+                            <option value="6:00 PM">6:00 PM</option>
+                            <option value="7:00 PM">7:00 PM</option>
+                            <option value="8:00 PM">8:00 PM</option>
+                            <option value="9:00 PM">9:00 PM</option>
+                            <option value="10:00 PM">10:00 PM</option>
+                            <option value="11:00 PM">11:00 PM</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>US Rest Days:</label>
+                        <input type="text" id="scheduleUsRd" required placeholder="e.g., SUN MON">
+                        <small>Enter days as: SUN MON TUE WED THU FRI SAT</small>
+                    </div>
+                    <div class="form-group">
+                        <label>MLA Rest Days:</label>
+                        <input type="text" id="scheduleMlaRd" required placeholder="e.g., SUN MON">
+                        <small>Enter days as: SUN MON TUE WED THU FRI SAT</small>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Bulk Entry Tab -->
+            <div id="bulkEntryTab" class="schedule-tab-content">
+                <form id="addBulkScheduleForm">
+                    <div class="form-group">
+                        <label>Paste Schedule Data:</label>
+                        <textarea id="bulkScheduleData" rows="8" placeholder="Copy and paste directly from Excel/Google Sheets or use comma-separated format:
+
+MINIMUM REQUIRED (2 columns):
+Engineer Name    Shift Start
+GREGGY JIM IVAN PADRIQUE    9:00 PM
+KIMBERLY GABIONZA    9:00 PM
+
+EXTENDED FORMAT (4+ columns):
+ENGINEER    SHIFT START    US RD    MLA RD
+GREGGY JIM IVAN PADRIQUE    9:00 PM    SUN MON    SUN MON
+KIMBERLY GABIONZA    9:00 PM    WED THU    WED THU
+
+OR comma-separated:
+ENGINEER,SHIFT START
+GREGGY JIM IVAN PADRIQUE,9:00 PM
+
+All formats supported!" style="width: 100%; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4;"></textarea>
+                    </div>
+                    <div class="bulk-format-help">
+                        <h4>📋 Format Instructions:</h4>
+                        <ul>
+                            <li><strong>✅ REQUIRED:</strong> Engineer Name, Shift Start Time</li>
+                            <li><strong>📋 OPTIONAL:</strong> Additional columns (rest days, etc.) - will be preserved</li>
+                            <li><strong>Header row supported:</strong> Will be automatically detected and skipped</li>
+                            <li><strong>Multiple formats supported:</strong> Copy directly from Excel/Google Sheets (tab-separated) OR comma-separated format</li>
+                            <li><strong>One engineer per line</strong></li>
+                            <li><strong>Engineer names:</strong> Full name (will handle special characters like ñ, á, etc.)</li>
+                            <li><strong>Shift times:</strong> Use 12-hour format (e.g., 9:00 PM, 12:00 AM)</li>
+                            <li><strong>💡 Flexible:</strong> Works with 2+ columns - only name and shift time are required!</li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Schedule Modal -->
+    <div id="editScheduleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" onclick="closeEditScheduleModal()">&times;</span>
+                <h3>Edit Engineer Schedule</h3>
+            </div>
+            <form id="editScheduleForm">
+                <div class="form-group">
+                    <label>Engineer Name:</label>
+                    <input type="text" id="editScheduleEngineer" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Shift Start Time:</label>
+                    <select id="editScheduleShiftStart" required>
+                        <option value="">Select Shift Start</option>
+                        <option value="12:00 AM">12:00 AM</option>
+                        <option value="1:00 AM">1:00 AM</option>
+                        <option value="2:00 AM">2:00 AM</option>
+                        <option value="3:00 AM">3:00 AM</option>
+                        <option value="4:00 AM">4:00 AM</option>
+                        <option value="5:00 AM">5:00 AM</option>
+                        <option value="6:00 AM">6:00 AM</option>
+                        <option value="7:00 AM">7:00 AM</option>
+                        <option value="8:00 AM">8:00 AM</option>
+                        <option value="9:00 AM">9:00 AM</option>
+                        <option value="10:00 AM">10:00 AM</option>
+                        <option value="11:00 AM">11:00 AM</option>
+                        <option value="12:00 PM">12:00 PM</option>
+                        <option value="1:00 PM">1:00 PM</option>
+                        <option value="2:00 PM">2:00 PM</option>
+                        <option value="3:00 PM">3:00 PM</option>
+                        <option value="4:00 PM">4:00 PM</option>
+                        <option value="5:00 PM">5:00 PM</option>
+                        <option value="6:00 PM">6:00 PM</option>
+                        <option value="7:00 PM">7:00 PM</option>
+                        <option value="8:00 PM">8:00 PM</option>
+                        <option value="9:00 PM">9:00 PM</option>
+                        <option value="10:00 PM">10:00 PM</option>
+                        <option value="11:00 PM">11:00 PM</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>US Rest Days:</label>
+                    <input type="text" id="editScheduleUsRd" required placeholder="e.g., SUN MON">
+                    <small>Enter days as: SUN MON TUE WED THU FRI SAT</small>
+                </div>
+                <div class="form-group">
+                    <label>MLA Rest Days:</label>
+                    <input type="text" id="editScheduleMlaRd" required placeholder="e.g., SUN MON">
+                    <small>Enter days as: SUN MON TUE WED THU FRI SAT</small>
+                </div>
+                <div>
+                    <button type="submit" class="btn-primary">Update Schedule</button>
+                    <button type="button" class="btn-secondary" onclick="closeEditScheduleModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="attendance-app.js"></script>
+</body>
+</html>

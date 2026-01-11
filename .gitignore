@@ -1,0 +1,22 @@
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Optional: Ignore CSV data files if they contain sensitive data
+# Uncomment the lines below if needed
+# *.csv
+# Daily Summary*.csv
